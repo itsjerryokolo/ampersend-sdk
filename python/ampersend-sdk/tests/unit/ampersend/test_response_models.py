@@ -1,6 +1,6 @@
 """Unit tests for API response models."""
 
-from ampersend_sdk.ampersend_api.types import (
+from ampersend_sdk.ampersend.types import (
     ApiResponseAgentPaymentAuthorization,
     ApiResponseAgentPaymentEvent,
 )

@@ -3,8 +3,8 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from ampersend_sdk.ampersend_api import AmpersendTreasurer, ApiClient
-from ampersend_sdk.ampersend_api.types import (
+from ampersend_sdk.ampersend import AmpersendTreasurer, ApiClient
+from ampersend_sdk.ampersend.types import (
     ApiResponseAgentPaymentAuthorization,
 )
 from ampersend_sdk.x402 import X402Authorization, X402Wallet
