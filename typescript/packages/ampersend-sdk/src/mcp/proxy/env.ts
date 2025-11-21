@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { OWNABLE_VALIDATOR } from "../../smart-account/constants.ts"
+
 /**
  * Creates a Zod schema for environment variable validation with configurable prefix.
  *
@@ -33,7 +35,8 @@ export function createEnvSchema(envPrefix = "") {
         .refine((val) => val.startsWith("0x"), {
           message: "Must start with 0x",
         })
-        .optional(),
+        .optional()
+        .default(OWNABLE_VALIDATOR),
       BUYER_SMART_ACCOUNT_CHAIN_ID: z.coerce.number().int().optional(),
     })
     .refine(
@@ -48,17 +51,14 @@ export function createEnvSchema(envPrefix = "") {
     )
     .refine(
       (data) => {
-        // If smart account address is set, all smart account fields must be set
+        // If smart account address is set, session key must be set (validator has default)
         if (data.BUYER_SMART_ACCOUNT_ADDRESS) {
-          return (
-            data.BUYER_SMART_ACCOUNT_KEY_PRIVATE_KEY !== undefined &&
-            data.BUYER_SMART_ACCOUNT_VALIDATOR_ADDRESS !== undefined
-          )
+          return data.BUYER_SMART_ACCOUNT_KEY_PRIVATE_KEY !== undefined
         }
         return true
       },
       {
-        message: `Smart Account mode requires all fields: ${envPrefix}BUYER_SMART_ACCOUNT_ADDRESS, ${envPrefix}BUYER_SMART_ACCOUNT_KEY_PRIVATE_KEY, ${envPrefix}BUYER_SMART_ACCOUNT_VALIDATOR_ADDRESS`,
+        message: `Smart Account mode requires: ${envPrefix}BUYER_SMART_ACCOUNT_ADDRESS, ${envPrefix}BUYER_SMART_ACCOUNT_KEY_PRIVATE_KEY (${envPrefix}BUYER_SMART_ACCOUNT_VALIDATOR_ADDRESS is optional)`,
         path: ["BUYER_SMART_ACCOUNT_ADDRESS"],
       },
     )
@@ -72,7 +72,7 @@ export function createEnvSchema(envPrefix = "") {
           `Missing wallet configuration. Provide either:\n` +
           `  - EOA mode: ${envPrefix}BUYER_PRIVATE_KEY\n` +
           `  - Smart Account mode: ${envPrefix}BUYER_SMART_ACCOUNT_ADDRESS, ` +
-          `${envPrefix}BUYER_SMART_ACCOUNT_KEY_PRIVATE_KEY, ${envPrefix}BUYER_SMART_ACCOUNT_VALIDATOR_ADDRESS`,
+          `${envPrefix}BUYER_SMART_ACCOUNT_KEY_PRIVATE_KEY (${envPrefix}BUYER_SMART_ACCOUNT_VALIDATOR_ADDRESS is optional)`,
         path: ["BUYER_PRIVATE_KEY"],
       },
     )
