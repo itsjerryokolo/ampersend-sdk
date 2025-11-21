@@ -201,7 +201,7 @@ be used without inheritance.
 
 - HTTP proxy server that adds x402 to any MCP server
 - Session management and treasurer integration
-- CLI tool: `ampersand-proxy`
+- CLI tool: `ampersend-proxy`
 
 **FastMCP Server**
 
@@ -214,7 +214,7 @@ be used without inheritance.
 **Python Examples** (see `.env.example`):
 
 - `EXAMPLES_A2A_BUYER__PRIVATE_KEY`: Private key for buyer's EOA wallet
-- `EXAMPLES_A2A_BUYER__SELLER_AGENT_URL`: URL of seller agent (default: http://localhost:8001)
+- `EXAMPLES_A2A_BUYER__SELLER_AGENT_URL`: URL of seller agent (default: <http://localhost:8001>)
 - `GOOGLE_API_KEY`: Required for seller's google_search tool
 - `EXAMPLES_A2A_SELLER__PAY_TO_ADDRESS`: Ethereum address to receive payments
 
