@@ -71,10 +71,10 @@ Bridges client and server transports with payment handling.
 
 ```bash
 # Start with defaults (port 3000)
-ampersand-proxy
+ampersend-proxy
 
 # Custom port
-ampersand-proxy --port 8080
+ampersend-proxy --port 8080
 
 # Development (watch mode)
 pnpm --filter ampersend-sdk proxy:dev
