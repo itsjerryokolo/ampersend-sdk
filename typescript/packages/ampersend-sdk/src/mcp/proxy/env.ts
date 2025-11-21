@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { OWNABLE_VALIDATOR } from "../../smart-account/constants.ts"
+
 /**
  * Creates a Zod schema for environment variable validation with configurable prefix.
  *
@@ -34,7 +36,7 @@ export function createEnvSchema(envPrefix = "") {
           message: "Must start with 0x",
         })
         .optional()
-        .default("0x000000000013fdB5234E4E3162a810F54d9f7E98"),
+        .default(OWNABLE_VALIDATOR),
       BUYER_SMART_ACCOUNT_CHAIN_ID: z.coerce.number().int().optional(),
     })
     .refine(
