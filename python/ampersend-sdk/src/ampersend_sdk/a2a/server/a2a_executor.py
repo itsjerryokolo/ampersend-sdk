@@ -14,7 +14,7 @@ from x402_a2a.types import (
     TaskStatus,
 )
 
-from .a2a_monkey import MonkeyA2aAgentExecutor
+from .a2a_monkey import MonkeyA2aAgentExecutor, set_max_llm_calls
 from .x402_server_executor import X402ServerExecutorFactory
 
 
@@ -25,9 +25,12 @@ class X402A2aAgentExecutor(AgentExecutor):
         runner: Runner | Callable[..., Runner | Awaitable[Runner]],
         config: Optional[A2aAgentExecutorConfig] = None,
         x402_executor_factory: X402ServerExecutorFactory,
+        max_llm_calls: Optional[int] = None,
         **kwargs: Any,
     ):
-        inner = InnerA2aAgentExecutor(runner=runner, config=config, **kwargs)
+        inner = InnerA2aAgentExecutor(
+            runner=runner, config=config, max_llm_calls=max_llm_calls, **kwargs
+        )
         x402 = x402_executor_factory(delegate=inner, config=x402ExtensionConfig())
         # TODO: fix typing in x402-a2a
         self._executor = OuterA2aAgentExecutor(delegate=x402)  # type: ignore[arg-type]
@@ -110,10 +113,23 @@ class OuterA2aAgentExecutor(AgentExecutor):
 
 
 class InnerA2aAgentExecutor(MonkeyA2aAgentExecutor):
+    def __init__(
+        self,
+        *,
+        runner: Runner | Callable[..., Runner | Awaitable[Runner]],
+        config: Optional[A2aAgentExecutorConfig] = None,
+        max_llm_calls: Optional[int] = None,
+        **kwargs: Any,
+    ):
+        super().__init__(runner=runner, config=config, **kwargs)
+        self._max_llm_calls = max_llm_calls
+
     @override
     async def execute(
         self,
         context: RequestContext,
         event_queue: EventQueue,
     ) -> None:
+        # Set max_llm_calls in context for the monkey-patched converter
+        set_max_llm_calls(self._max_llm_calls)
         await self._handle_request(context, event_queue)
