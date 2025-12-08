@@ -86,7 +86,7 @@ export EXAMPLES_A2A_BUYER__AMPERSEND_API_URL=https://api.staging.ampersend.ai
 uv --directory=python/examples run -- adk run src/examples/a2a/buyer/adk
 
 # Option 2: Web UI (opens in browser)
-uv --directory=python/examples run -- adk web src/examples/a2a/buyer/adk
+uv --directory=python/examples run -- adk web src/examples/a2a/buyer
 ```
 
 **Features**:
@@ -117,7 +117,7 @@ export GOOGLE_API_KEY=...  # Get from https://aistudio.google.com/apikey
 uv --directory=python/examples run -- adk run src/examples/a2a/buyer/local_agent
 
 # Option 2: Web UI (opens in browser)
-uv --directory=python/examples run -- adk web src/examples/a2a/buyer/local_agent
+uv --directory=python/examples run -- adk web src/examples/a2a/buyer
 ```
 
 **Features**:
@@ -159,7 +159,7 @@ export EXAMPLE_BUYER__MCP__TARGET_SERVER_URL=https://subgraph-mcp.x402.staging.a
 uv --directory=python/examples run -- adk run src/examples/mcp/buyer/adk
 
 # Option 2: Web UI (opens in browser)
-uv --directory=python/examples run -- adk web src/examples/mcp/buyer/adk
+uv --directory=python/examples run -- adk web src/examples/mcp/buyer
 ```
 
 **Features**:
