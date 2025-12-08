@@ -108,6 +108,7 @@ Build a local agent that can discover and delegate to multiple specialized remot
 export EXAMPLES_A2A_BUYER__SMART_ACCOUNT_ADDRESS=0x...
 export EXAMPLES_A2A_BUYER__SMART_ACCOUNT_KEY_PRIVATE_KEY=0x...
 export EXAMPLES_A2A_BUYER__AMPERSEND_API_URL=https://api.staging.ampersend.ai
+export GOOGLE_API_KEY=...  # Get from https://aistudio.google.com/apikey
 
 # Optional: Add more remote agents
 # export EXAMPLES_A2A_BUYER__AGENT_URL_2=https://another-agent.example.com

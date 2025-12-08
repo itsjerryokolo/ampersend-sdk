@@ -10,12 +10,14 @@ as ADK tools that the orchestrator can use.
 Getting Started (Testnet):
     1. Create agent account at https://app.staging.ampersend.ai
     2. Fund with testnet USDC: https://faucet.circle.com/ (Base Sepolia)
-    3. Set environment variables:
+    3. Get Google API key from https://aistudio.google.com/apikey
+    4. Set environment variables:
         export EXAMPLES_A2A_BUYER__SMART_ACCOUNT_ADDRESS=0x...
         export EXAMPLES_A2A_BUYER__SMART_ACCOUNT_KEY_PRIVATE_KEY=0x...
         export EXAMPLES_A2A_BUYER__AMPERSEND_API_URL=https://api.staging.ampersend.ai
+        export GOOGLE_API_KEY=...  # For Gemini model
 
-    4. Run:
+    5. Run:
         uv --directory=examples run -- adk run src/examples/a2a/buyer/local_agent
 
 Standalone Alternative (No Ampersend):
@@ -27,6 +29,8 @@ Standalone Alternative (No Ampersend):
         uv --directory=examples run -- adk run src/examples/a2a/buyer/local_agent
 
 Environment Variables:
+    GOOGLE_API_KEY: Google API key for Gemini model (required)
+        Get from: https://aistudio.google.com/apikey
     EXAMPLES_A2A_BUYER__SMART_ACCOUNT_ADDRESS: Agent smart account address (from dashboard)
     EXAMPLES_A2A_BUYER__SMART_ACCOUNT_KEY_PRIVATE_KEY: Session key (from dashboard)
     EXAMPLES_A2A_BUYER__AMPERSEND_API_URL: Ampersend API URL
