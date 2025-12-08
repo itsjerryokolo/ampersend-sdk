@@ -77,7 +77,9 @@ class TestInitialization:
         assert toolset.task_callback is None
         assert not toolset._initialized
 
-    async def test_init_with_custom_params(self, mock_treasurer: MagicMock, mock_httpx_client: MagicMock) -> None:
+    async def test_init_with_custom_params(
+        self, mock_treasurer: MagicMock, mock_httpx_client: MagicMock
+    ) -> None:
         """Test initialization with custom parameters."""
         callback = MagicMock()
 
@@ -94,7 +96,9 @@ class TestInitialization:
         assert toolset.httpx_client == mock_httpx_client
         assert toolset.task_callback == callback
 
-    async def test_get_before_agent_callback_returns_callable(self, mock_treasurer: MagicMock) -> None:
+    async def test_get_before_agent_callback_returns_callable(
+        self, mock_treasurer: MagicMock
+    ) -> None:
         """Test that get_before_agent_callback returns a callable."""
         toolset = X402RemoteAgentToolset(
             remote_agent_urls=["http://agent1.com"],
@@ -172,7 +176,9 @@ class TestAgentDiscovery:
             ):
                 await toolset._before_agent_callback(mock_context)
 
-    async def test_discovery_only_runs_once(self, mock_treasurer: MagicMock, mock_agent_card: AgentCard) -> None:
+    async def test_discovery_only_runs_once(
+        self, mock_treasurer: MagicMock, mock_agent_card: AgentCard
+    ) -> None:
         """Test that discovery only runs once."""
         toolset = X402RemoteAgentToolset(
             remote_agent_urls=["http://test-agent.com"],
@@ -208,7 +214,9 @@ class TestAgentDiscovery:
 class TestToolRegistration:
     """Test tool registration and retrieval."""
 
-    async def test_get_tools_returns_function_tools(self, mock_treasurer: MagicMock) -> None:
+    async def test_get_tools_returns_function_tools(
+        self, mock_treasurer: MagicMock
+    ) -> None:
         """Test that get_tools returns FunctionTool instances."""
         toolset = X402RemoteAgentToolset(
             remote_agent_urls=["http://test-agent.com"],
@@ -240,7 +248,9 @@ class TestToolRegistration:
 class TestListAgents:
     """Test x402_a2a_list_agents tool."""
 
-    async def test_list_agents_empty_before_discovery(self, mock_treasurer: MagicMock) -> None:
+    async def test_list_agents_empty_before_discovery(
+        self, mock_treasurer: MagicMock
+    ) -> None:
         """Test that list_agents returns empty list before discovery."""
         toolset = X402RemoteAgentToolset(
             remote_agent_urls=["http://test-agent.com"],
@@ -250,7 +260,9 @@ class TestListAgents:
         agents = toolset.x402_a2a_list_agents()
         assert agents == []
 
-    async def test_list_agents_returns_card_info(self, mock_treasurer: MagicMock, mock_agent_card: AgentCard) -> None:
+    async def test_list_agents_returns_card_info(
+        self, mock_treasurer: MagicMock, mock_agent_card: AgentCard
+    ) -> None:
         """Test that list_agents returns agent info after discovery."""
         toolset = X402RemoteAgentToolset(
             remote_agent_urls=["http://test-agent.com"],
@@ -311,7 +323,9 @@ class TestGetAgentDetails:
 class TestSendToAgent:
     """Test x402_a2a_send_to_agent tool."""
 
-    async def test_send_message_agent_not_found(self, mock_treasurer: MagicMock) -> None:
+    async def test_send_message_agent_not_found(
+        self, mock_treasurer: MagicMock
+    ) -> None:
         """Test that sending to unknown agent raises ValueError."""
         toolset = X402RemoteAgentToolset(
             remote_agent_urls=["http://test-agent.com"],
@@ -411,7 +425,9 @@ class TestSendToAgent:
         # Verify context was updated
         assert mock_tool_context.state["x402_agent_contexts"]["test_agent"] == "ctx-1"
 
-    async def test_send_message_updates_context(self, mock_treasurer: MagicMock, mock_agent_card: AgentCard) -> None:
+    async def test_send_message_updates_context(
+        self, mock_treasurer: MagicMock, mock_agent_card: AgentCard
+    ) -> None:
         """Test that context_id is stored in state after response."""
         toolset = X402RemoteAgentToolset(
             remote_agent_urls=["http://test-agent.com"],
@@ -603,7 +619,9 @@ class TestArtifactChunking:
         assert len(task.artifacts) == 1
         assert task.artifacts[0].artifact_id == "art-1"
 
-    async def test_process_streaming_artifact_chunks(self, mock_treasurer: MagicMock) -> None:
+    async def test_process_streaming_artifact_chunks(
+        self, mock_treasurer: MagicMock
+    ) -> None:
         """Test processing multiple streaming chunks."""
         toolset = X402RemoteAgentToolset(
             remote_agent_urls=["http://test-agent.com"],
@@ -676,7 +694,9 @@ class TestArtifactChunking:
 class TestErrorHandling:
     """Test error handling."""
 
-    async def test_jsonrpc_error_response_raises(self, mock_treasurer: MagicMock, mock_agent_card: AgentCard) -> None:
+    async def test_jsonrpc_error_response_raises(
+        self, mock_treasurer: MagicMock, mock_agent_card: AgentCard
+    ) -> None:
         """Test that JSONRPCErrorResponse raises RuntimeError."""
         toolset = X402RemoteAgentToolset(
             remote_agent_urls=["http://test-agent.com"],
@@ -713,7 +733,9 @@ class TestErrorHandling:
                 "test_agent", "test message", mock_tool_context
             )
 
-    async def test_no_response_raises_error(self, mock_treasurer: MagicMock, mock_agent_card: AgentCard) -> None:
+    async def test_no_response_raises_error(
+        self, mock_treasurer: MagicMock, mock_agent_card: AgentCard
+    ) -> None:
         """Test that empty iteration raises RuntimeError."""
         toolset = X402RemoteAgentToolset(
             remote_agent_urls=["http://test-agent.com"],
