@@ -122,13 +122,15 @@ a2a_app = to_a2a(agent, host="localhost", port=8001)
 
 ### X402Treasurer
 
-Handles payment authorization and status tracking. The `NaiveTreasurer` implementation auto-approves all payments
-(useful for testing and demos).
+Handles payment authorization and status tracking.
+
+- **AmpersendTreasurer** (recommended) - Enforces spend limits and provides monitoring via Ampersend API
+- **NaiveTreasurer** - Auto-approves all payments (useful for testing and demos only)
 
 ### Wallets
 
 - **AccountWallet** - For EOA (Externally Owned Accounts)
-- **SmartAccountWallet** - For ERC-4337 smart accounts with ERC-1271 signatures
+- **SmartAccountWallet** - For ERC-4337 smart accounts with ERC-1271 signatures. Currently supports accounts with the ERC-7579 OwnableValidator from Rhinestone.
 
 ### Payment Flow
 
