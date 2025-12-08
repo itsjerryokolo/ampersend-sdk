@@ -130,7 +130,8 @@ Handles payment authorization and status tracking.
 ### Wallets
 
 - **AccountWallet** - For EOA (Externally Owned Accounts)
-- **SmartAccountWallet** - For ERC-4337 smart accounts with ERC-1271 signatures. Currently supports accounts with the ERC-7579 OwnableValidator from Rhinestone.
+- **SmartAccountWallet** - For ERC-4337 smart accounts with ERC-1271 signatures. Currently supports accounts with the
+  ERC-7579 OwnableValidator from Rhinestone.
 
 ### Payment Flow
 
