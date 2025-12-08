@@ -217,7 +217,7 @@ class X402RemoteAgentToolset(BaseToolset):
         other metadata for a specific agent.
 
         Args:
-            agent_name: Name of the agent to get details for (from list_agents).
+            agent_name: Name of the agent to get details for (from x402_a2a_list_agents).
 
         Returns:
             Dict containing agent card details including:
@@ -272,7 +272,7 @@ class X402RemoteAgentToolset(BaseToolset):
         Conversation context is maintained per-agent in ADK state.
 
         Args:
-            agent_name: Name of the remote agent to contact (from list_agents).
+            agent_name: Name of the remote agent to contact (from x402_a2a_list_agents).
             message: Message text to send to the agent.
             tool_context: ADK tool context (auto-injected, provides state access).
 
