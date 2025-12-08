@@ -182,6 +182,7 @@ class X402RemoteAgentToolset(BaseToolset):
         """
         return [
             FunctionTool(func=self.x402_a2a_list_agents),
+            FunctionTool(func=self.x402_a2a_get_agent_details),
             FunctionTool(func=self.x402_a2a_send_to_agent),
         ]
 
@@ -208,6 +209,58 @@ class X402RemoteAgentToolset(BaseToolset):
             {"name": card.name, "description": card.description}
             for card in self._agent_cards.values()
         ]
+
+    def x402_a2a_get_agent_details(self, agent_name: str) -> dict[str, Any]:
+        """Get detailed information about a specific remote agent.
+
+        Returns the full agent card with capabilities, skills, version, and
+        other metadata for a specific agent.
+
+        Args:
+            agent_name: Name of the agent to get details for (from list_agents).
+
+        Returns:
+            Dict containing agent card details including:
+            - name: Agent name
+            - description: Agent description
+            - url: Agent URL
+            - version: Agent version
+            - capabilities: Streaming support and content types
+            - skills: Available skills/capabilities
+            - documentation_url: Link to agent documentation (if available)
+
+        Raises:
+            ValueError: If agent_name is not found in available agents.
+
+        Example:
+            To use this tool, the LLM would call:
+            ```
+            get_agent_details(agent_name="subgraph_agent")
+            ```
+
+            Returns detailed information about the agent's capabilities,
+            supported skills, and documentation.
+        """
+        if agent_name not in self._agent_cards:
+            available = ", ".join(self._agent_cards.keys())
+            raise ValueError(
+                f"Agent '{agent_name}' not found. Available agents: {available}"
+            )
+
+        card = self._agent_cards[agent_name]
+
+        # Return structured agent card information
+        return {
+            "name": card.name,
+            "description": card.description,
+            "url": card.url,
+            "version": card.version,
+            "capabilities": {
+                "streaming": card.capabilities.streaming,
+            },
+            "skills": [skill.model_dump() for skill in card.skills],
+            "documentation_url": card.documentation_url,
+        }
 
     async def x402_a2a_send_to_agent(
         self, agent_name: str, message: str, tool_context: ToolContext

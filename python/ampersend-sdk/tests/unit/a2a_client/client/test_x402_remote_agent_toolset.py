@@ -218,7 +218,7 @@ class TestToolRegistration:
         tools = await toolset.get_tools()
 
         assert isinstance(tools, list)
-        assert len(tools) == 2
+        assert len(tools) == 3
         assert all(isinstance(tool, FunctionTool) for tool in tools)
 
     async def test_tool_names_are_correct(self, mock_treasurer: MagicMock) -> None:
@@ -232,6 +232,7 @@ class TestToolRegistration:
         tool_names = [tool.name for tool in tools]
 
         assert "x402_a2a_list_agents" in tool_names
+        assert "x402_a2a_get_agent_details" in tool_names
         assert "x402_a2a_send_to_agent" in tool_names
 
 
@@ -264,6 +265,46 @@ class TestListAgents:
         assert len(agents) == 1
         assert agents[0]["name"] == "test_agent"
         assert agents[0]["description"] == "A test agent"
+
+
+@pytest.mark.asyncio
+class TestGetAgentDetails:
+    """Test x402_a2a_get_agent_details tool."""
+
+    async def test_get_agent_details_returns_card_info(
+        self, mock_treasurer: MagicMock, mock_agent_card: AgentCard
+    ) -> None:
+        """Test that get_agent_details returns full agent card info."""
+        toolset = X402RemoteAgentToolset(
+            remote_agent_urls=["http://test-agent.com"],
+            treasurer=mock_treasurer,
+        )
+
+        # Manually populate (simulating discovery)
+        toolset._agent_cards["test_agent"] = mock_agent_card
+
+        details = toolset.x402_a2a_get_agent_details("test_agent")
+
+        assert details["name"] == "test_agent"
+        assert details["description"] == "A test agent"
+        assert details["url"] == "http://test-agent.com"
+        assert details["version"] == "1.0.0"
+        assert "capabilities" in details
+        assert details["capabilities"]["streaming"] is True
+        assert "skills" in details
+        assert "documentation_url" in details
+
+    async def test_get_agent_details_agent_not_found(
+        self, mock_treasurer: MagicMock
+    ) -> None:
+        """Test that getting details for unknown agent raises ValueError."""
+        toolset = X402RemoteAgentToolset(
+            remote_agent_urls=["http://test-agent.com"],
+            treasurer=mock_treasurer,
+        )
+
+        with pytest.raises(ValueError, match="Agent 'unknown_agent' not found"):
+            toolset.x402_a2a_get_agent_details("unknown_agent")
 
 
 @pytest.mark.asyncio
