@@ -235,7 +235,7 @@ class X402RemoteAgentToolset(BaseToolset):
         Example:
             To use this tool, the LLM would call:
             ```
-            get_agent_details(agent_name="subgraph_agent")
+            x402_a2a_get_agent_details(agent_name="subgraph_agent")
             ```
 
             Returns detailed information about the agent's capabilities,
@@ -285,7 +285,7 @@ class X402RemoteAgentToolset(BaseToolset):
         Example:
             To use this tool, the LLM would call:
             ```
-            send_to_agent(
+            x402_a2a_send_to_agent(
                 agent_name="subgraph_agent",
                 message="Query Uniswap V3 pools on Base"
             )
