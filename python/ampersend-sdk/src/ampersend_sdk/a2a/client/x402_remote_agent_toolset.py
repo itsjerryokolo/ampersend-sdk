@@ -135,6 +135,12 @@ class X402RemoteAgentToolset(BaseToolset):
             # Resolve agent card
             card = await A2ACardResolver(self.httpx_client, url).get_agent_card()
 
+            # Check for duplicate agent names
+            if card.name in self._agent_cards:
+                raise ValueError(
+                    f"Cannot add two agents with the same name: {card.name}"
+                )
+
             # Create X402 client for this agent
             client = self._client_factory.create(card=card)
 
