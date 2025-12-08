@@ -5,18 +5,21 @@ with automatic x402 payment handling.
 """
 
 import uuid
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import httpx
 from a2a.client import A2ACardResolver, ClientConfig
 from a2a.types import (
     AgentCard,
+    Artifact,
     JSONRPCErrorResponse,
     Message,
     Part,
     Role,
     Task,
+    TaskArtifactUpdateEvent,
     TaskState,
+    TaskStatusUpdateEvent,
     TextPart,
 )
 from google.adk.agents.callback_context import CallbackContext
@@ -29,6 +32,9 @@ from google.adk.tools.tool_context import ToolContext
 from ...x402.treasurer import X402Treasurer
 from .x402_client_composed import X402ClientComposed
 from .x402_client_factory import X402ClientFactory
+
+# Type alias for task callback
+TaskUpdateCallback = Callable[[Task], None]
 
 
 class X402RemoteAgentToolset(BaseToolset):
@@ -70,6 +76,7 @@ class X402RemoteAgentToolset(BaseToolset):
         treasurer: X402Treasurer instance for payment authorization.
         state_key_prefix: Key prefix for storing agent contexts in ADK state.
         httpx_client: HTTP client for making requests (optional).
+        task_callback: Optional callback called with Task updates during execution.
     """
 
     def __init__(
@@ -79,6 +86,7 @@ class X402RemoteAgentToolset(BaseToolset):
         *,
         state_key_prefix: str = "x402_agent_contexts",
         httpx_client: Optional[httpx.AsyncClient] = None,
+        task_callback: Optional[TaskUpdateCallback] = None,
         **kwargs: Any,
     ):
         """Initialize the remote agent toolset.
@@ -90,6 +98,9 @@ class X402RemoteAgentToolset(BaseToolset):
                 Defaults to "x402_agent_contexts".
             httpx_client: Optional HTTP client. If not provided, creates a default
                 client with 30 second timeout.
+            task_callback: Optional callback called with Task updates during streaming
+                responses. Useful for displaying progress or logging. Signature:
+                Callable[[Task], None].
             **kwargs: Additional arguments passed to BaseToolset.
         """
         super().__init__(**kwargs)
@@ -98,11 +109,15 @@ class X402RemoteAgentToolset(BaseToolset):
         self.treasurer = treasurer
         self.state_key_prefix = state_key_prefix
         self.httpx_client = httpx_client or httpx.AsyncClient(timeout=30)
+        self.task_callback = task_callback
 
         # Will be populated in before_agent_callback
         self._remote_clients: dict[str, X402ClientComposed] = {}
         self._agent_cards: dict[str, AgentCard] = {}
         self._initialized = False
+
+        # Artifact chunking state (for streaming artifacts)
+        self._artifact_chunks: dict[str, list[Artifact]] = {}
 
         # Create client factory for creating X402 clients
         self._client_factory = X402ClientFactory(
@@ -245,37 +260,46 @@ class X402RemoteAgentToolset(BaseToolset):
 
         # Send message - x402 middleware handles payments automatically
         # Response is AsyncIterator[ClientEvent | Message]
-        final_response = None
+        task = None
         async for response in client.send_message(request):
-            # Buffer streaming responses, keep final result
-            final_response = response
+            # Handle errors
+            if isinstance(response, JSONRPCErrorResponse):
+                error = response.error
+                raise RuntimeError(
+                    f"Agent '{agent_name}' returned error: {error.message} "
+                    f"(Code: {error.code})"
+                )
 
-        if final_response is None:
+            # Handle Message response (early return)
+            if isinstance(response, Message):
+                # Message means interaction is complete
+                return self._extract_text_from_message(response)
+
+            # Otherwise it's ClientEvent: (Task, Event | None) tuple
+            task, event = response
+
+            # Process streaming events
+            if event:
+                if isinstance(event, TaskArtifactUpdateEvent):
+                    # Handle streaming artifacts
+                    self._process_artifact_event(task, event)
+                elif isinstance(event, TaskStatusUpdateEvent):
+                    # Status update - task.status already updated by client
+                    pass
+
+            # Call user callback if provided
+            if self.task_callback:
+                self.task_callback(task)
+
+        # After iteration completes
+        if task is None:
             raise RuntimeError(f"No response received from agent '{agent_name}'")
 
-        # Handle errors
-        if isinstance(final_response, JSONRPCErrorResponse):
-            error = final_response.error
-            raise RuntimeError(
-                f"Agent '{agent_name}' returned error: {error.message} "
-                f"(Code: {error.code})"
-            )
+        # Update context for next message
+        if task.context_id:
+            self._update_context_id(agent_name, task.context_id, tool_context)
 
-        # Extract response based on type
-        if isinstance(final_response, Message):
-            # Direct message response
-            response_text = self._extract_text_from_message(final_response)
-            # Messages don't have context_id, so we don't update it
-        else:
-            # Task response (tuple of Task and optional event)
-            task, _ = final_response
-            response_text = self._extract_text_from_task(task)
-
-            # Update context for next message
-            if task.context_id:
-                self._update_context_id(agent_name, task.context_id, tool_context)
-
-        return response_text
+        return self._extract_text_from_task(task)
 
     def _get_context_id(
         self, agent_name: str, tool_context: ToolContext
@@ -348,3 +372,43 @@ class X402RemoteAgentToolset(BaseToolset):
 
         # Task still in progress
         return f"Task status: {task.status.state.value}"
+
+    def _process_artifact_event(
+        self, task: Task, event: TaskArtifactUpdateEvent
+    ) -> None:
+        """Process streaming artifact events.
+
+        Handles chunked artifact streaming by buffering partial artifacts
+        and assembling them into complete artifacts in the task.
+
+        Args:
+            task: Task being updated.
+            event: Artifact update event with chunk information.
+        """
+        artifact = event.artifact
+        artifact_id = artifact.artifact_id
+
+        if not event.append:
+            # First chunk or complete artifact
+            if event.last_chunk is None or event.last_chunk:
+                # Complete artifact in one go - add directly to task
+                if not task.artifacts:
+                    task.artifacts = []
+                task.artifacts.append(artifact)
+            else:
+                # First chunk of streaming artifact - start buffering
+                self._artifact_chunks[artifact_id] = [artifact]
+        else:
+            # Append chunk to existing artifact
+            if artifact_id in self._artifact_chunks:
+                # Add parts to buffered artifact
+                current_artifact = self._artifact_chunks[artifact_id][-1]
+                current_artifact.parts.extend(artifact.parts)
+
+                if event.last_chunk:
+                    # Done streaming - move from buffer to task
+                    if not task.artifacts:
+                        task.artifacts = []
+                    task.artifacts.append(current_artifact)
+                    # Clean up buffer
+                    del self._artifact_chunks[artifact_id]
