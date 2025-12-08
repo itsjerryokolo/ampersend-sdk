@@ -210,7 +210,10 @@ uv --directory=examples run -- \
 
 ### Production
 
-Ready to use production endpoints? Update your environment:
+Ready to use production endpoints?
+
+1. Create account at **https://app.ampersend.ai**
+2. Update your environment:
 
 ```bash
 # Ampersend
