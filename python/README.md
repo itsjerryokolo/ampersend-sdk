@@ -141,7 +141,8 @@ Handles payment authorization and status tracking.
 
 ## Examples
 
-Examples use The Graph's subgraph services (MCP and A2A) which provide blockchain data with x402 payment. You can swap these URLs with any other MCP-x402 or A2A-x402 compatible service.
+Examples use The Graph's subgraph services (MCP and A2A) which provide blockchain data with x402 payment. You can swap
+these URLs with any other MCP-x402 or A2A-x402 compatible service.
 
 Complete examples demonstrating x402 integration with A2A and MCP protocols.
 
