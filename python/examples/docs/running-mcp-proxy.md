@@ -44,7 +44,6 @@ pnpm build
 ```bash
 export BUYER_SMART_ACCOUNT_ADDRESS=0x...           # From staging dashboard
 export BUYER_SMART_ACCOUNT_KEY_PRIVATE_KEY=0x...  # From staging dashboard
-export BUYER_SMART_ACCOUNT_VALIDATOR_ADDRESS=0x000000000013FDB5234E4E3162A810F54D9F7E98
 export AMPERSEND_API_URL=https://api.staging.ampersend.ai
 ```
 
@@ -86,7 +85,6 @@ http://localhost:3000/mcp?target=https://subgraph-mcp.x402.staging.ampersend.ai
 ```bash
 BUYER_SMART_ACCOUNT_ADDRESS=0x...           # Your agent's smart account
 BUYER_SMART_ACCOUNT_KEY_PRIVATE_KEY=0x...  # Session key from dashboard
-BUYER_SMART_ACCOUNT_VALIDATOR_ADDRESS=0x000000000013FDB5234E4E3162A810F54D9F7E98
 AMPERSEND_API_URL=https://api.staging.ampersend.ai  # Staging (testnet)
 ```
 
