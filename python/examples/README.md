@@ -75,7 +75,11 @@ export EXAMPLES_A2A_BUYER__SMART_ACCOUNT_ADDRESS=0x...
 export EXAMPLES_A2A_BUYER__SMART_ACCOUNT_KEY_PRIVATE_KEY=0x...
 export EXAMPLES_A2A_BUYER__AMPERSEND_API_URL=https://api.staging.ampersend.ai
 
+# Option 1: Interactive CLI
 uv --directory=python/examples run -- adk run src/examples/a2a/buyer/adk
+
+# Option 2: Web UI (opens in browser)
+uv --directory=python/examples run -- adk web src/examples/a2a/buyer/adk
 ```
 
 **Features**:
@@ -101,7 +105,11 @@ export EXAMPLES_A2A_BUYER__AMPERSEND_API_URL=https://api.staging.ampersend.ai
 # Optional: Add more remote agents
 # export EXAMPLES_A2A_BUYER__AGENT_URL_2=https://another-agent.example.com
 
+# Option 1: Interactive CLI
 uv --directory=python/examples run -- adk run src/examples/a2a/buyer/local_agent
+
+# Option 2: Web UI (opens in browser)
+uv --directory=python/examples run -- adk web src/examples/a2a/buyer/local_agent
 ```
 
 **Features**:
@@ -139,7 +147,11 @@ ampersend-proxy  # Runs on http://localhost:3000
 export EXAMPLE_BUYER__MCP__PROXY_URL=http://localhost:3000/mcp
 export EXAMPLE_BUYER__MCP__TARGET_SERVER_URL=https://subgraph-mcp.x402.staging.ampersend.ai
 
+# Option 1: Interactive CLI
 uv --directory=python/examples run -- adk run src/examples/mcp/buyer/adk
+
+# Option 2: Web UI (opens in browser)
+uv --directory=python/examples run -- adk web src/examples/mcp/buyer/adk
 ```
 
 **Features**:
