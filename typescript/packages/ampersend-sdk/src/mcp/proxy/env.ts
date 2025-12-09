@@ -3,6 +3,14 @@ import { z } from "zod"
 import { OWNABLE_VALIDATOR } from "../../smart-account/constants.ts"
 
 /**
+ * Environment configuration schema for MCP proxy
+ *
+ * Supports two modes:
+ * 1. Smart Account + AmpersendTreasurer (recommended)
+ * 2. EOA + NaiveTreasurer (standalone testing)
+ */
+
+/**
  * Creates a Zod schema for environment variable validation with configurable prefix.
  *
  * @param envPrefix - The environment variable prefix (empty string for no prefix)
@@ -38,6 +46,10 @@ export function createEnvSchema(envPrefix = "") {
         .optional()
         .default(OWNABLE_VALIDATOR),
       BUYER_SMART_ACCOUNT_CHAIN_ID: z.coerce.number().int().optional(),
+      AMPERSEND_API_URL: z
+        .string()
+        .url()
+        .optional(),
     })
     .refine(
       (data) => {

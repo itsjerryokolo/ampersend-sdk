@@ -39,18 +39,30 @@ pnpm build
 
 ### 2. Configure Wallet
 
-**Recommended: Smart Account** (from app.staging.ampersend.ai for testnet, app.ampersend.ai for production)
+The proxy uses environment variables with an optional prefix. By default, `pnpm proxy:dev` uses the `TS__MCP_PROXY__` prefix. You can disable the prefix with `--env-prefix ""`.
+
+**Recommended: Smart Account with Ampersend** (from app.staging.ampersend.ai for testnet, app.ampersend.ai for production)
 
 ```bash
-export BUYER_SMART_ACCOUNT_ADDRESS=0x...           # From staging dashboard
-export BUYER_SMART_ACCOUNT_KEY_PRIVATE_KEY=0x...  # From staging dashboard
+# With default prefix (for pnpm proxy:dev)
+export TS__MCP_PROXY__BUYER_SMART_ACCOUNT_ADDRESS=0x...           # From staging dashboard
+export TS__MCP_PROXY__BUYER_SMART_ACCOUNT_KEY_PRIVATE_KEY=0x...  # From staging dashboard
+export TS__MCP_PROXY__AMPERSEND_API_URL=https://api.staging.ampersend.ai
+
+# OR without prefix (use --env-prefix "")
+export BUYER_SMART_ACCOUNT_ADDRESS=0x...
+export BUYER_SMART_ACCOUNT_KEY_PRIVATE_KEY=0x...
 export AMPERSEND_API_URL=https://api.staging.ampersend.ai
 ```
 
-**Standalone Alternative: EOA**
+**Standalone Alternative: EOA (No Ampersend)**
 
 ```bash
-export BUYER_PRIVATE_KEY=0x...  # Your wallet private key
+# With prefix
+export TS__MCP_PROXY__BUYER_PRIVATE_KEY=0x...
+
+# OR without prefix
+export BUYER_PRIVATE_KEY=0x...
 ```
 
 ### 3. Start the Proxy
@@ -80,18 +92,20 @@ http://localhost:3000/mcp?target=https://subgraph-mcp.x402.staging.ampersend.ai
 
 ### Required (Choose One Mode)
 
-**Smart Account Mode (Recommended)**:
+**Note**: Add the prefix from `--env-prefix` if using one (e.g., `TS__MCP_PROXY__` for `pnpm proxy:dev`).
+
+**Smart Account + Ampersend (Recommended)**:
 
 ```bash
 BUYER_SMART_ACCOUNT_ADDRESS=0x...           # Your agent's smart account
 BUYER_SMART_ACCOUNT_KEY_PRIVATE_KEY=0x...  # Session key from dashboard
-AMPERSEND_API_URL=https://api.staging.ampersend.ai  # Staging (testnet)
+AMPERSEND_API_URL=https://api.staging.ampersend.ai  # For spend limits & monitoring
 ```
 
-**EOA Mode (Standalone)**:
+**EOA + Naive (Standalone)**:
 
 ```bash
-BUYER_PRIVATE_KEY=0x...  # Wallet private key
+BUYER_PRIVATE_KEY=0x...  # Wallet private key (no AMPERSEND_API_URL = naive mode)
 ```
 
 ### Optional
