@@ -39,9 +39,11 @@ pnpm build
 
 ### 2. Configure Wallet
 
-The proxy uses environment variables with an optional prefix. By default, `pnpm proxy:dev` uses the `TS__MCP_PROXY__` prefix. You can disable the prefix with `--env-prefix ""`.
+The proxy uses environment variables with an optional prefix. By default, `pnpm proxy:dev` uses the `TS__MCP_PROXY__`
+prefix. You can disable the prefix with `--env-prefix ""`.
 
-**Recommended: Smart Account with Ampersend** (from app.staging.ampersend.ai for testnet, app.ampersend.ai for production)
+**Recommended: Smart Account with Ampersend** (from app.staging.ampersend.ai for testnet, app.ampersend.ai for
+production)
 
 ```bash
 # With default prefix (for pnpm proxy:dev)

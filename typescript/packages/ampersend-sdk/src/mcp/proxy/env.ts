@@ -46,10 +46,7 @@ export function createEnvSchema(envPrefix = "") {
         .optional()
         .default(OWNABLE_VALIDATOR),
       BUYER_SMART_ACCOUNT_CHAIN_ID: z.coerce.number().int().optional(),
-      AMPERSEND_API_URL: z
-        .string()
-        .url()
-        .optional(),
+      AMPERSEND_API_URL: z.string().url().optional(),
     })
     .refine(
       (data) => {
