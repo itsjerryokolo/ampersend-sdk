@@ -18,7 +18,7 @@ export BUYER_PRIVATE_KEY=0x...
 pnpm --filter ampersend-sdk proxy:dev
 
 # Connect clients to:
-# http://localhost:3000/mcp?target=http://original-server:8000/mcp
+# http://localhost:8402/mcp?target=http://original-server:8000/mcp
 ```
 
 ## API Reference
