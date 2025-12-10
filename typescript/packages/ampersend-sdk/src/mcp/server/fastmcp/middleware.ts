@@ -1,7 +1,7 @@
-import { McpError } from "@modelcontextprotocol/sdk/types.js"
 import {
   type AudioContent,
   type ContentResult,
+  CustomMcpError,
   type ImageContent,
   type ResourceContent,
   type ResourceLink,
@@ -69,7 +69,7 @@ function createPaymentError(
   requirements: PaymentRequirements,
   errorReason: string | null = null,
   paymentResponse: SettleResponse | null = null,
-): McpError {
+): CustomMcpError {
   const data: PaymentErrorData = {
     message: "Payment required for tool execution",
     code: 402,
@@ -83,7 +83,7 @@ function createPaymentError(
     data["x402/payment-response"] = paymentResponse
   }
 
-  return new McpError(402, data.message, data)
+  return new CustomMcpError(402, data.message, data)
 }
 
 export type ToolExecuteReturn =
