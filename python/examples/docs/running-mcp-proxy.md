@@ -81,13 +81,13 @@ pnpm proxy:start
 pnpm proxy:dev
 ```
 
-The proxy starts on **http://localhost:3000** by default.
+The proxy starts on **http://localhost:8402** by default.
 
 ### 4. Connect Your Client
 
 ```bash
 # Proxy URL with target parameter
-http://localhost:3000/mcp?target=https://subgraph-mcp.x402.staging.ampersend.ai
+http://localhost:8402/mcp?target=https://subgraph-mcp.x402.staging.ampersend.ai
 ```
 
 ## Environment Variables
@@ -149,7 +149,7 @@ export AMPERSEND_API_URL=https://api.ampersend.ai  # Production
 
 ```bash
 # Example: Production subgraph MCP server
-http://localhost:3000/mcp?target=https://subgraph-mcp.x402.thegraph.com
+http://localhost:8402/mcp?target=https://subgraph-mcp.x402.thegraph.com
 ```
 
 **Important**: Staging services are rate-limited. For production workloads, use production endpoints.
@@ -162,7 +162,7 @@ http://localhost:3000/mcp?target=https://subgraph-mcp.x402.thegraph.com
 
 **Solutions**:
 
-- Check proxy is running: `curl http://localhost:3000/health`
+- Check proxy is running: `curl http://localhost:8402/health`
 - Check port isn't in use: `lsof -i :3000`
 - Try different port: `PORT=8080 ampersend-proxy`
 

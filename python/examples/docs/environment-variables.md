@@ -73,7 +73,7 @@ All examples default to staging services (testnet, rate-limited).
 
 | Variable                                | Staging (Default)                                | Production                               |
 | --------------------------------------- | ------------------------------------------------ | ---------------------------------------- |
-| `EXAMPLE_BUYER__MCP__PROXY_URL`         | `http://localhost:3000/mcp`                      | `http://localhost:3000/mcp`              |
+| `EXAMPLE_BUYER__MCP__PROXY_URL`         | `http://localhost:8402/mcp`                      | `http://localhost:8402/mcp`              |
 | `EXAMPLE_BUYER__MCP__TARGET_SERVER_URL` | `https://subgraph-mcp.x402.staging.ampersend.ai` | `https://subgraph-mcp.x402.thegraph.com` |
 
 ### MCP Proxy Configuration

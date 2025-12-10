@@ -185,10 +185,10 @@ Uses MCP protocol with transparent payment proxy.
 export BUYER_SMART_ACCOUNT_ADDRESS=0x...
 export BUYER_SMART_ACCOUNT_KEY_PRIVATE_KEY=0x...
 export AMPERSEND_API_URL=https://api.staging.ampersend.ai
-ampersend-proxy  # Runs on http://localhost:3000
+ampersend-proxy  # Runs on http://localhost:8402
 
 # 2. Run buyer (connects to staging MCP service)
-export EXAMPLE_BUYER__MCP__PROXY_URL=http://localhost:3000/mcp
+export EXAMPLE_BUYER__MCP__PROXY_URL=http://localhost:8402/mcp
 export EXAMPLE_BUYER__MCP__TARGET_SERVER_URL=https://subgraph-mcp.x402.staging.ampersend.ai
 uv --directory=examples run -- adk run src/examples/mcp/buyer/adk
 ```
