@@ -68,7 +68,7 @@ export function createWalletConfig(envConfig: ProxyEnvConfig): WalletConfig {
 /**
  * Parses command-line arguments and environment variables to build proxy configuration
  */
-function parseOptions(args: Array<string>, envPrefix = ""): ProxyServerOptions {
+function parseOptions(args: Array<string>, envPrefix = "TS__MCP_PROXY__"): ProxyServerOptions {
   // Parse CLI arguments first to check for env-prefix flag
   const program = new Command()
     .name("ampersend-proxy")
