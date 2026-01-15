@@ -54,8 +54,8 @@
     "format": "prettier . --check --ignore-path ../../.prettierignore",
     "format:fix": "prettier . --write --list-different --ignore-path ../../.prettierignore",
     "test": "vitest run",
-    "proxy:dev": "tsx watch src/mcp/proxy/cli.ts --env-prefix TS__MCP_PROXY__",
-    "proxy:start": "node dist/mcp/proxy/cli.js --env-prefix TS__MCP_PROXY__"
+    "proxy:dev": "tsx watch src/mcp/proxy/cli.ts",
+    "proxy:start": "node dist/mcp/proxy/cli.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "github:edgeandnode/mcp-typescript-sdk#2de06543904483073d8cc13db1d0e08e16601081",
