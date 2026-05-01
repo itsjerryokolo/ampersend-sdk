@@ -22,9 +22,11 @@ from .types import (
     ApiError,
     ApiRequestAgentPaymentAuthorization,
     ApiRequestAgentPaymentEvent,
+    ApiRequestAuthorizeReceipt,
     ApiRequestLogin,
     ApiResponseAgentPaymentAuthorization,
     ApiResponseAgentPaymentEvent,
+    ApiResponseAuthorizeReceipt,
     ApiResponseLogin,
     ApiResponseNonce,
     AuthenticationState,
@@ -165,6 +167,45 @@ class ApiClient:
         )
 
         return ApiResponseAgentPaymentAuthorization(**response)
+
+    async def authorize_receipt(
+        self,
+        payer_address: str,
+        payment_requirements: PaymentRequirements,
+        nonce: str,
+        payment_signature: str,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> ApiResponseAuthorizeReceipt:
+        """Run seller-side compliance screening on an incoming payment.
+
+        Called by the seller's x402 middleware after decoding the
+        X-PAYMENT header and before honoring the payment. The
+        configured `agent_address` is the seller agent (the receiver);
+        SIWE auth is performed under that agent's identity.
+
+        Returns an `ApiResponseAuthorizeReceipt` with `authorized=True`
+        for allow and `authorized=False` (plus `reason`, `reason_code`)
+        for deny. HTTP 200 in both branches; the caller decides
+        whether to 402 the upstream client.
+        """
+        await self._ensure_authenticated()
+
+        request = ApiRequestAuthorizeReceipt(
+            payer_address=payer_address,
+            payment_requirements=payment_requirements,
+            nonce=nonce,
+            payment_signature=payment_signature,
+            context=context,
+        )
+
+        response = await self._fetch(
+            f"/api/v1/agents/{self.agent_address}/payment/authorize-receipt",
+            method="POST",
+            json_data=request.model_dump(mode="json", by_alias=True, exclude_none=True),
+            headers={"Authorization": f"Bearer {self._auth.token}"},
+        )
+
+        return ApiResponseAuthorizeReceipt(**response)
 
     async def report_payment_event(
         self,
