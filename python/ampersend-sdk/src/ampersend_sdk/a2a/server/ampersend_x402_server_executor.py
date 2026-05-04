@@ -15,6 +15,9 @@ because by the time we settle, the gate has already approved.
 
 from typing import Any
 
+from x402.types import (
+    ExactPaymentPayload,
+)
 from x402_a2a import (
     FacilitatorConfig,
     x402ExtensionConfig,
@@ -75,11 +78,42 @@ class AmpersendX402ServerExecutor(FacilitatorX402ServerExecutor):
         a 402 with the structured reason. On allow, the call falls
         through to the facilitator's normal verify (signature, amount,
         nonce reuse, etc.).
+
+        Failure modes:
+          - Unsupported payment scheme: returns a structured deny.
+            We require ExactPaymentPayload because the compliance
+            call needs the EIP-3009 `authorization` block; future
+            schemes would need their own extraction logic.
+          - Compliance API error (network, auth failure, 5xx): the
+            underlying `ApiError` propagates out of this method by
+            design. Translating to a structured deny would silently
+            swallow outages; surfacing as an exception lets the
+            upstream task layer 500 / alert. This is fail-closed
+            as a class — a deny because we can't reach the gate —
+            just at a different layer than a structured deny.
+
+        Note on the `payer` field: on a deny, we echo back
+        `authorization.from_` *unverified*. The EIP-3009 signature
+        is checked only after compliance allows and control passes
+        to the facilitator. The field is intended for client-side
+        error reporting (the buyer sees back the address they
+        claimed to pay from), not as an authenticated identity.
         """
-        # PaymentPayload.payload is the typed ExactPaymentPayload —
-        # not a dict. EIP3009Authorization.from_ uses an underscore
-        # because `from` is a Python keyword; the field's wire alias
-        # is "from".
+        # PaymentPayload.payload is scheme-specific. We only support
+        # `exact` today (the only x402 scheme that ships
+        # signed-EIP-3009 authorizations); a future scheme would
+        # need its own field extraction. Guard against an
+        # AttributeError on .authorization that would otherwise
+        # crash before the compliance call even runs.
+        if not isinstance(payload.payload, ExactPaymentPayload):
+            return VerifyResponse(
+                isValid=False,
+                invalidReason="Unsupported payment scheme",
+                payer=None,
+            )
+
+        # EIP3009Authorization.from_ uses an underscore because
+        # `from` is a Python keyword; the field's wire alias is "from".
         authorization = payload.payload.authorization
         compliance_result = await self._api_client.authorize_receipt(
             payer_address=authorization.from_,

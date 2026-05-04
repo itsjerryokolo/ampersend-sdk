@@ -196,6 +196,41 @@ class TestAmpersendX402ServerExecutor:
         assert result.is_valid is False
         assert result.invalid_reason == "Payment denied by compliance"
 
+    async def test_verify_payment_rejects_unsupported_scheme(
+        self,
+        mock_delegate: AgentExecutor,
+        x402_config: x402ExtensionConfig,
+    ) -> None:
+        """If the payload isn't an `ExactPaymentPayload` (today the
+        only x402 scheme that carries an EIP-3009 authorization), the
+        executor returns a structured deny rather than crashing on
+        attribute access. Future schemes would need their own field
+        extraction in this method."""
+        api_client = AsyncMock(spec=ApiClient)
+        api_client.authorize_receipt = AsyncMock()
+
+        executor = AmpersendX402ServerExecutor(
+            delegate=mock_delegate,
+            config=x402_config,
+            api_client=api_client,
+        )
+
+        # Construct a PaymentPayload whose `payload` is not the
+        # exact-scheme variant. Use a MagicMock so attribute access
+        # would succeed if the guard wasn't there — that way a
+        # missing guard would surface as a different failure
+        # (compliance call with bogus args), not as the test passing.
+        payload = MagicMock(spec=PaymentPayload)
+        payload.payload = MagicMock()  # not an ExactPaymentPayload
+
+        result = await executor.verify_payment(payload, _make_payment_requirements())
+
+        assert result.is_valid is False
+        assert result.invalid_reason == "Unsupported payment scheme"
+        assert result.payer is None
+        # Compliance API should never be called for an unsupported scheme.
+        api_client.authorize_receipt.assert_not_awaited()
+
     async def test_settle_payment_delegates_to_facilitator(
         self,
         mock_delegate: AgentExecutor,

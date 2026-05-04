@@ -178,6 +178,15 @@ class ApiResponseAuthorizeReceipt(BaseModel):
     based on `authorized`. `screening_id` references the
     audit/display row in `screening_result` — the offending row on
     deny, the counterparty row on allow.
+
+    The flat-with-optional shape is deliberate: the wire spec is a
+    discriminated union (`reason`/`reason_code` only present on
+    deny), but we model the two sides as one struct with optional
+    fields and let the caller fall back when a deny lacks a reason
+    rather than parse-failing. This is more permissive than the
+    spec — a future tightening to `Union[Authorized, Denied]` with
+    a discriminator would catch wire-shape regressions earlier;
+    today, regressions surface via the caller's fallback string.
     """
 
     authorized: bool
