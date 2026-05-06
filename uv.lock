@@ -150,6 +150,11 @@ dependencies = [
     { name = "x402" },
 ]
 
+[package.optional-dependencies]
+http = [
+    { name = "fastapi" },
+]
+
 [package.dev-dependencies]
 test = [
     { name = "pydantic-settings" },
@@ -164,12 +169,14 @@ requires-dist = [
     { name = "ampersend-a2a-x402", specifier = ">=1.0.1" },
     { name = "eth-account", specifier = ">=0.11.0" },
     { name = "eth-utils", specifier = ">=2.0.0" },
+    { name = "fastapi", marker = "extra == 'http'", specifier = ">=0.115" },
     { name = "google-adk", specifier = ">=1.14.0,<=1.14.1" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "siwe", specifier = ">=4.0.0" },
     { name = "x402", specifier = ">=0.1.4,<1" },
 ]
+provides-extras = ["http"]
 
 [package.metadata.requires-dev]
 test = [
