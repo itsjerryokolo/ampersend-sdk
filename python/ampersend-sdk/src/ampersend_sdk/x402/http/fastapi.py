@@ -99,7 +99,7 @@ COMPLIANCE_API_TIMEOUT_SECONDS = float(
 )
 
 
-def require_payment_with_compliance(
+def require_payment(
     *,
     api_client: ApiClient,
     price: Price,
@@ -145,12 +145,12 @@ def require_payment_with_compliance(
     Example:
         >>> from fastapi import FastAPI
         >>> from ampersend_sdk.ampersend import ApiClient, ApiClientOptions
-        >>> from ampersend_sdk.x402.http.fastapi import require_payment_with_compliance
+        >>> from ampersend_sdk.x402.http.fastapi import require_payment
         >>>
         >>> app = FastAPI()
         >>> client = ApiClient(ApiClientOptions(...))
         >>> app.middleware("http")(
-        ...     require_payment_with_compliance(
+        ...     require_payment(
         ...         api_client=client,
         ...         price="$0.01",
         ...         pay_to_address="0xSeller...",

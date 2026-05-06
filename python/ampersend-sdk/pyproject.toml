@@ -19,7 +19,7 @@ dependencies = [
 # Optional surfaces. Buyer-side (`X402HttpTransport`,
 # `AmpersendTreasurer`) and A2A users don't pay the FastAPI import
 # cost. `pip install ampersend-sdk[http]` pulls fastapi for sellers
-# building paid HTTP APIs via `require_payment_with_compliance`.
+# building paid HTTP APIs via `require_payment`.
 # We rely on `x402[standard]` to bring fastapi transitively today —
 # declaring it here decouples us from upstream's dep choices.
 [project.optional-dependencies]

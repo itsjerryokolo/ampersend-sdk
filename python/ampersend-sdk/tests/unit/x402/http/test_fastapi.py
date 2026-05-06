@@ -1,5 +1,5 @@
 """Tests for the compliance-gated FastAPI middleware
-(`ampersend_sdk.x402.http.fastapi.require_payment_with_compliance`).
+(`ampersend_sdk.x402.http.fastapi.require_payment`).
 
 Covers the four short-circuit branches that don't require a
 facilitator:
@@ -31,7 +31,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from ampersend_sdk.ampersend import ApiClient
 from ampersend_sdk.ampersend.types import ApiError, ApiResponseAuthorizeReceipt
-from ampersend_sdk.x402.http.fastapi import require_payment_with_compliance
+from ampersend_sdk.x402.http.fastapi import require_payment
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -47,7 +47,7 @@ PAYER_ADDRESS = "0xa160cdab225685da1d56aa342ad8841c3b53f291"
 def _make_app(api_client: ApiClient) -> FastAPI:
     app = FastAPI()
     app.middleware("http")(
-        require_payment_with_compliance(
+        require_payment(
             api_client=api_client,
             price="$0.01",
             pay_to_address=SELLER_ADDRESS,
@@ -184,7 +184,7 @@ def test_bypass_paths_override_swaps_default() -> None:
     api_client = MagicMock(spec=ApiClient)
     app = FastAPI()
     app.middleware("http")(
-        require_payment_with_compliance(
+        require_payment(
             api_client=api_client,
             price="$0.01",
             pay_to_address=SELLER_ADDRESS,
