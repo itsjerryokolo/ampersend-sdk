@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 import httpx
 from eth_account import Account
 from eth_account.messages import encode_defunct
-from siwe.siwe import (  # type: ignore[import-untyped]
+from siwe.siwe import (
     ISO8601Datetime,
     SiweMessage,
     VersionEnum,
