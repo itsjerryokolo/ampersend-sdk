@@ -15,6 +15,37 @@ future deferred-scheme settlement (arbitrary delay between verify and
 settle) would invalidate this assumption and require a settle-time
 re-screen; today's `exact` scheme settles within the same x402
 round-trip so the existing approval is fresh.
+
+## Shared with the FastAPI middleware
+
+- **Compliance-deny posture**: deliberately generic `invalid_reason`
+  ("Payment rejected"). The full detail (reason, code, screening_id,
+  payer) is logged at WARNING server-side; never echoed to the
+  caller. See `GENERIC_DENY_REASON`.
+- **Timeout**: 5s on `authorize_receipt`, env-overridable via
+  `AMPERSEND_COMPLIANCE_API_TIMEOUT_SECONDS`.
+
+## Deliberate asymmetry with the FastAPI middleware — fail-closed
+
+On compliance API outage / timeout / `ApiError`, this executor
+**lets the exception propagate** out of `verify_payment` so the
+upstream task layer surfaces a 500 to the agent caller. The FastAPI
+middleware **catches** the same exceptions and returns the generic
+403 instead. The two surfaces fail closed differently by design:
+
+- A2A clients are first-party agents with programmatic error
+  handling; surfacing an outage as an exception is the right
+  operator signal. Translating to a structured deny would silently
+  swallow outages from the agent's monitoring.
+- HTTP buyers are CLI/curl/Python clients with poor error semantics;
+  a 500 invites blind retry under outage. The 403 deny posture
+  short-circuits the buyer's payment loop cleanly.
+
+If you need the FastAPI catch-and-return-deny shape on the A2A side
+(e.g., behind a service mesh with automatic retry), wrap the
+executor with your own try/except and convert as needed. Don't
+modify this default — it carries operator signal that consumers
+rely on.
 """
 
 import asyncio
@@ -162,8 +193,10 @@ class AmpersendX402ServerExecutor(FacilitatorX402ServerExecutor):
             # deny string; the full detail (incl. screening_id for
             # support-ticket correlation) stays server-side. Mirrors
             # the FastAPI middleware's logging shape so a single
-            # log query catches denies across both surfaces.
-            logger.info(
+            # log query catches denies across both surfaces. WARNING
+            # (not INFO) because compliance denies are unusual events
+            # worth surfacing in default log filters and alerting.
+            logger.warning(
                 "Compliance denied payment",
                 extra={
                     "payer_address": authorization.from_,

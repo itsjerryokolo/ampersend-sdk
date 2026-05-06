@@ -36,6 +36,12 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 SELLER_ADDRESS = "0x742d35Cc6634C0532925a3b8D13Cec84d3d1b123"
+# Generic non-sanctioned-looking 40-hex address. Used as the payer
+# in fail-closed/transport-failure tests where the value never
+# reaches the compliance API or the facilitator. Real format (not
+# `"0xPayer"`) so a future EIP3009Authorization format check
+# wouldn't break these tests for unrelated reasons.
+PAYER_ADDRESS = "0xa160cdab225685da1d56aa342ad8841c3b53f291"
 
 
 def _make_app(api_client: ApiClient) -> FastAPI:
@@ -157,7 +163,7 @@ def test_health_endpoint_bypasses_compliance_gate() -> None:
     """`/health` is liveness — the compliance middleware MUST NOT
     short-circuit it to 402 (which would break k8s probes). The
     bypass at the top of the middleware checks `request.url.path`
-    explicitly."""
+    against the `bypass_paths` set, default `("/health",)`."""
     api_client = MagicMock(spec=ApiClient)
     client = TestClient(_make_app(api_client))
 
@@ -167,6 +173,44 @@ def test_health_endpoint_bypasses_compliance_gate() -> None:
     # The compliance API should never have been touched on a /health
     # call — paid-route middleware is fully bypassed.
     api_client.authorize_receipt.assert_not_called()
+
+
+def test_bypass_paths_override_swaps_default() -> None:
+    """`bypass_paths` is configurable so sellers using non-`/health`
+    liveness paths (`/livez`, `/readyz`, `/metrics`) can still get
+    a clean 200 on probes. Overriding it replaces the default — it
+    doesn't extend it. Pin both: custom path bypassed (200), and
+    `/health` no longer bypassed when omitted from the override."""
+    api_client = MagicMock(spec=ApiClient)
+    app = FastAPI()
+    app.middleware("http")(
+        require_payment_with_compliance(
+            api_client=api_client,
+            price="$0.01",
+            pay_to_address=SELLER_ADDRESS,
+            network="base-sepolia",
+            bypass_paths=("/livez", "/metrics"),
+        )
+    )
+
+    @app.get("/livez")
+    async def livez() -> dict[str, str]:
+        return {"status": "ok"}
+
+    @app.get("/health")
+    async def health() -> dict[str, str]:
+        return {"status": "ok"}
+
+    client = TestClient(app)
+
+    # Custom bypass path: handler runs, no 402.
+    livez_response = client.get("/livez")
+    assert livez_response.status_code == 200
+
+    # `/health` is no longer in the override — middleware gates it
+    # like any paid route. Without an X-PAYMENT header → 402.
+    health_response = client.get("/health")
+    assert health_response.status_code == 402
 
 
 @pytest.mark.asyncio
@@ -187,7 +231,7 @@ async def test_compliance_api_transport_failure_fails_closed() -> None:
 
     response = client.get(
         "/insight",
-        headers={"X-PAYMENT": _signed_payment_header("0xPayer")},
+        headers={"X-PAYMENT": _signed_payment_header(PAYER_ADDRESS)},
     )
 
     assert response.status_code == 403
@@ -216,7 +260,7 @@ async def test_compliance_api_timeout_fails_closed(
     client = TestClient(_make_app(api_client))
     response = client.get(
         "/insight",
-        headers={"X-PAYMENT": _signed_payment_header("0xPayer")},
+        headers={"X-PAYMENT": _signed_payment_header(PAYER_ADDRESS)},
     )
 
     assert response.status_code == 403
@@ -239,7 +283,7 @@ async def test_compliance_api_programmer_error_does_not_swallow() -> None:
 
     response = client.get(
         "/insight",
-        headers={"X-PAYMENT": _signed_payment_header("0xPayer")},
+        headers={"X-PAYMENT": _signed_payment_header(PAYER_ADDRESS)},
     )
 
     # Bubbled out to ASGI → 500. Crucially, the body is NOT the
@@ -260,7 +304,7 @@ async def test_compliance_api_apierror_fails_closed() -> None:
     client = TestClient(_make_app(api_client))
     response = client.get(
         "/insight",
-        headers={"X-PAYMENT": _signed_payment_header("0xPayer")},
+        headers={"X-PAYMENT": _signed_payment_header(PAYER_ADDRESS)},
     )
 
     assert response.status_code == 403

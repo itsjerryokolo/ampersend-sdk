@@ -10,11 +10,45 @@ after header decode and before facilitator verify: a call to Ampersend's
 `POST /v1/agents/:address/payment/authorize-receipt` that runs TRM
 screening on the payer wallet (and its ERC-8004 owner if registered).
 
-The deny posture is shared with the A2A executor: a deliberately
-generic 403 body (`{"error": "Payment rejected"}`), full detail logged
-server-side. See `GENERIC_DENY_REASON` in
-`ampersend_sdk.a2a.server.ampersend_x402_server_executor` for the
-threat-model rationale.
+## Shared with the A2A executor
+
+- **Compliance-deny posture**: deliberately generic 403 body
+  (`{"error": "Payment rejected"}`). Telling a sanctioned wallet
+  which category flagged it lets it wallet-shop or feel out our
+  thresholds. The full detail (reason, code, screening_id) is
+  logged at WARNING server-side — see `GENERIC_DENY_REASON` in
+  `ampersend_sdk.a2a.server.ampersend_x402_server_executor`.
+- **Timeout**: 5s on `authorize_receipt`, env-overridable via
+  `AMPERSEND_COMPLIANCE_API_TIMEOUT_SECONDS`.
+- **Programmer errors propagate**: TypeError, AttributeError, etc.
+  surface as ASGI/upstream 500s rather than being masked as a deny.
+
+## Deliberate asymmetry with the A2A executor — fail-closed behavior
+
+The two surfaces fail closed differently on outage / timeout, by
+design:
+
+- **HTTP middleware (this module)**: catches `httpx.HTTPError`,
+  `asyncio.TimeoutError`, and `ApiError`, and returns the same
+  generic 403 as a deny. The buyer-facing posture during a
+  compliance-API outage looks identical to a deny — buyers iterate
+  on a 403 by abandoning the address, which is the safe default.
+  A 500 surfaced to the buyer would invite blind retry under
+  outage and mask the buyer's choice of address; the operator
+  still gets the signal via `logger.exception(...)`.
+- **A2A executor**: lets those exceptions propagate out of
+  `verify_payment` so the upstream task layer 500s. A2A clients
+  are first-party agents with programmatic error handling;
+  surfacing an outage as an exception is the right operator
+  signal there. Translating to a structured deny would silently
+  swallow outages from the agent's monitoring.
+
+Both are fail-closed in the abstract (no payment is honored on
+outage). The buyer/operator signaling differs because the
+counterparty model differs. If you need the A2A propagation shape
+on the HTTP side (e.g., behind a service mesh that converts
+exceptions to retryable 503s), don't use this middleware — call
+`api_client.authorize_receipt` directly and orchestrate.
 """
 
 import asyncio
@@ -22,6 +56,7 @@ import base64
 import json
 import logging
 import os
+from collections.abc import Sequence
 from typing import Any, Callable, Optional, cast, get_args
 
 import httpx
@@ -77,6 +112,7 @@ def require_payment_with_compliance(
     output_schema: Optional[Any] = None,
     facilitator_config: Optional[FacilitatorConfig] = None,
     resource: Optional[str] = None,
+    bypass_paths: Sequence[str] = ("/health",),
 ) -> Callable[[Request, Callable[[Request], Any]], Any]:
     """Generate a FastAPI middleware that compliance-gates payments
     before delegating to the standard x402 facilitator flow.
@@ -96,6 +132,12 @@ def require_payment_with_compliance(
         facilitator_config: Facilitator config for verify/settle.
             Defaults to the public x402.org facilitator.
         resource: Resource URL override (defaults to the request URL).
+        bypass_paths: Request paths that skip the entire compliance +
+            payment flow. Default `("/health",)` covers the standard
+            k8s liveness probe; sellers using `/livez`, `/readyz`, or
+            `/metrics` should override accordingly. Comparison is
+            exact-match — no prefix or glob — to keep the bypass list
+            auditable.
 
     Returns:
         Async FastAPI middleware compatible with `app.middleware("http")`.
@@ -131,13 +173,17 @@ def require_payment_with_compliance(
         raise ValueError(f"Invalid price: {price}. Error: {e}")
 
     facilitator = FacilitatorClient(facilitator_config)
+    # Materialize once into a frozenset for O(1) membership and to
+    # freeze the bypass list at middleware-creation time — passing a
+    # mutable sequence in and mutating it later shouldn't affect the
+    # gate.
+    bypass_paths_set = frozenset(bypass_paths)
 
     async def middleware(request: Request, call_next: Callable[[Request], Any]) -> Any:
-        # Liveness path is unauthenticated by design — bypasses the
-        # entire compliance + payment flow so k8s probes don't get a
-        # 402. Keep this check at the top so the bypass list is
-        # easy to extend.
-        if request.url.path == "/health":
+        # Liveness/metrics paths are unauthenticated by design —
+        # bypass the entire compliance + payment flow so k8s probes
+        # and Prometheus scrapes don't get a 402.
+        if request.url.path in bypass_paths_set:
             return await call_next(request)
 
         resource_url = resource or str(request.url)
@@ -251,8 +297,10 @@ def require_payment_with_compliance(
             # Operator-side audit trail. The buyer gets the generic
             # 403 above; the full detail stays server-side. Mirrors
             # the A2A executor's logging shape so a single log query
-            # catches denies across both surfaces.
-            logger.info(
+            # catches denies across both surfaces. WARNING (not INFO)
+            # because compliance denies are unusual events worth
+            # surfacing in default log filters and alerting rules.
+            logger.warning(
                 "Compliance denied payment",
                 extra={
                     "payer_address": authorization.from_,

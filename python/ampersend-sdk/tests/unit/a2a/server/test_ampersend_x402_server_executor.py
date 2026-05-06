@@ -373,3 +373,17 @@ def test_factory_constructs_executor_with_api_client(
     executor = factory(delegate=mock_delegate, config=x402_config)
     assert isinstance(executor, AmpersendX402ServerExecutor)
     assert executor._api_client is api_client
+
+
+def test_factory_rejects_unknown_kwargs() -> None:
+    """The outer factory previously accepted **kwargs and forwarded
+    them to the executor — which collided with `delegate`/`config`
+    that the inner factory passes by name and only failed at
+    construction time. After the **kwargs drop, an extra kwarg fails
+    fast at the factory call site instead. Pin that contract."""
+    api_client = MagicMock(spec=ApiClient)
+    with pytest.raises(TypeError):
+        create_ampersend_executor_factory(  # type: ignore[call-arg]
+            api_client=api_client,
+            unrecognized_kwarg="oops",
+        )

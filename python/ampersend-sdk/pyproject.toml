@@ -16,6 +16,17 @@ dependencies = [
     "pydantic>=2.0.0",
 ]
 
+# Optional surfaces. Buyer-side (`X402HttpTransport`,
+# `AmpersendTreasurer`) and A2A users don't pay the FastAPI import
+# cost. `pip install ampersend-sdk[http]` pulls fastapi for sellers
+# building paid HTTP APIs via `require_payment_with_compliance`.
+# We rely on `x402[standard]` to bring fastapi transitively today —
+# declaring it here decouples us from upstream's dep choices.
+[project.optional-dependencies]
+http = [
+    "fastapi>=0.115",
+]
+
 [build-system]
 requires = ["uv_build>=0.8.22,<0.9.0"]
 build-backend = "uv_build"
