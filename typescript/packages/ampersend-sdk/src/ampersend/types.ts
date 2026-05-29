@@ -344,9 +344,9 @@ export interface ApiClientOptions {
   agentAddress: Address
   timeout?: number
   /**
-   * Identifies the caller for the api's product-analytics (plan §6 in the
-   * monorepo's docs/plans/). Sent on every authenticated request as
-   * `X-Ampersend-Client: <clientName>/<version>`. The `ampersend` CLI passes
+   * Identifies the calling client for the API's product-analytics
+   * attribution. Sent on every authenticated request as
+   * `Ampersend-Client: <clientName>/<version>`. The `ampersend` CLI passes
    * `"ampersend-cli"`; library callers default to `"sdk-typescript"`.
    */
   clientName?: string

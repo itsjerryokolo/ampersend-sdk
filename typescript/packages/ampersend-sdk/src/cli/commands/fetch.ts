@@ -275,6 +275,7 @@ async function runFetch(url: string, options: FetchOptions): Promise<void> {
     smartAccountAddress: config.agentAccount,
     sessionKeyPrivateKey: config.agentKey,
     apiUrl,
+    clientName: "ampersend-cli",
   })
 
   // SIWX runs inside the payment wrapper: it satisfies auth-only routes and
@@ -286,6 +287,7 @@ async function runFetch(url: string, options: FetchOptions): Promise<void> {
         smartAccountAddress: config.agentAccount,
         sessionKeyPrivateKey: config.agentKey,
         apiUrl,
+        clientName: "ampersend-cli",
       })
     : fetch
   const fetchWithPayment = wrapFetchWithPayment(innerFetch, ampersendClient)

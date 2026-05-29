@@ -19,9 +19,9 @@ class ApiClientOptions(BaseModel):
     session_key_private_key: Optional[str] = None
     agent_address: str
     timeout: int = 30000
-    # Identifies the caller for the api's product-analytics (plan §6 in the
-    # monorepo's docs/plans/). Sent on every authenticated request as
-    # `X-Ampersend-Client: <client_name>/<version>`. Library callers default
+    # Identifies the calling client for the API's product-analytics
+    # attribution. Sent on every authenticated request as
+    # `Ampersend-Client: <client_name>/<version>`. Library callers default
     # to "sdk-python".
     client_name: Optional[str] = None
 

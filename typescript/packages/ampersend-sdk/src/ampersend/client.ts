@@ -35,10 +35,10 @@ export class ApiClient {
   private agentAddress: Address
   private timeout: number
   /**
-   * `X-Ampersend-Client` header value sent on every authenticated request.
-   * Format: `<name>/<version>`. Used by the api for product-analytics
-   * client attribution (plan §6). Defaults to `sdk-typescript/<VERSION>`;
-   * the `ampersend` CLI overrides `clientName` to `ampersend-cli`.
+   * `Ampersend-Client` header value sent on every authenticated request.
+   * Format: `<name>/<version>`. Used by the API for product-analytics
+   * client attribution. Defaults to `sdk-typescript/<VERSION>`; the
+   * `ampersend` CLI overrides `clientName` to `ampersend-cli`.
    */
   private clientHeader: string
   private authMutex = new Mutex()
@@ -256,12 +256,12 @@ export class ApiClient {
     const url = `${this.baseUrl}${path}`
 
     try {
-      // Merge in the X-Ampersend-Client header so the api can attribute
-      // product-analytics events to SDK vs CLI vs library callers
-      // (plan §6 in the monorepo). Caller-supplied headers win on conflict.
+      // Merge in the Ampersend-Client header so the API can attribute
+      // product-analytics events to SDK vs CLI vs library callers.
+      // Caller-supplied headers win on conflict.
       const headers = new Headers(init.headers)
-      if (!headers.has("X-Ampersend-Client")) {
-        headers.set("X-Ampersend-Client", this.clientHeader)
+      if (!headers.has("Ampersend-Client")) {
+        headers.set("Ampersend-Client", this.clientHeader)
       }
 
       const response = await fetch(url, {
